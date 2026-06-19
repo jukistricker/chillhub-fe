@@ -1,11 +1,20 @@
+import { Media } from "./media";
+
 // User & Auth Types
 export interface User {
   id: string;
   username: string;
   email: string;
-  profileImage: string;
-  subscriberCount: number;
+  fullName?: string;
+  avatarUrl?: string;
+  provider?: string;
+  externalId?: string;
+  lang: number;
+  roles: { id: string; name: string }[];
   createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
 }
 
 export interface AuthState {
@@ -32,10 +41,10 @@ export interface Video {
   userId: string;
 }
 
-export interface VideoDetail extends Video {
+export interface MediaDetail extends Media {
   comments: Comment[];
   isSubscribed: boolean;
-  videoUrl: string;
+  videoUrl: string; // Đường dẫn file stream từ BE
 }
 
 export interface Comment {
@@ -68,17 +77,17 @@ export interface ChannelDetail extends Channel {
   videos: Video[];
 }
 
-// Videos State
-export interface VideosState {
-  videos: Video[];
-  videoDetail: VideoDetail | null;
+export interface MediaState {
+  items: Media[];
+  mediaDetail: MediaDetail | null;
+  nextCursor: string | null;
+  pageSize: number;
+  isDescending: boolean;
+  search: string;
+  hasMore: boolean;
   loading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
+  selectedMedia: Media | null;
 }
 
 // Channels State
@@ -89,10 +98,6 @@ export interface ChannelsState {
   error: string | null;
 }
 
-// Theme State
-export interface ThemeState {
-  theme: 'light' | 'dark';
-}
 
 // UI State
 export interface UIState {
@@ -103,8 +108,7 @@ export interface UIState {
 // Root State Type
 export interface RootState {
   auth: AuthState;
-  videos: VideosState;
+  medias: MediaState;
   channels: ChannelsState;
-  theme: ThemeState;
   ui: UIState;
 }

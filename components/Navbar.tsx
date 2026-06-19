@@ -1,37 +1,50 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useAppDispatch, useAppSelector } from '@/store'
-import { setSearchQuery, toggleSidebar } from '@/store/slices/uiSlice'
-import { toggleTheme } from '@/store/slices/themeSlice'
-import { logoutUser } from '@/store/slices/authSlice'
-import { searchVideos } from '@/store/slices/videosSlice'
-import { Menu, Search, Moon, Sun, LogOut, User } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setSearchQuery, toggleSidebar } from "@/store/slices/uiSlice";
+import { logoutUser } from "@/store/slices/authSlice";
+import { Menu, Search, Moon, Sun, LogOut, User, Video } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "@base-ui/react"; // Giữ nguyên theo code cũ của bạn
+import { fetchMedias } from "@/store/slices/mediasSlice";
 
 export default function Navbar() {
-  const dispatch = useAppDispatch()
-  const router = useRouter()
-  const { theme } = useTheme()
-  const [searchValue, setSearchValue] = useState('')
-  const { user, isAuthenticated } = useAppSelector(state => state.auth)
-  const { searchQuery } = useAppSelector(state => state.ui)
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const [searchValue, setSearchValue] = useState("");
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { searchQuery } = useAppSelector((state) => state.ui);
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchValue.trim()) {
-      dispatch(setSearchQuery(searchValue))
-      dispatch(searchVideos(searchValue) as any)
-      router.push('/')
+      dispatch(setSearchQuery(searchValue));
+      
+      // (reset cursor về null)
+      dispatch(fetchMedias({ search: searchValue, cursor: null, pageSize: 12 }) as any);
+      
+      router.push("/");
     }
-  }
+  };
 
   const handleLogout = () => {
-    dispatch(logoutUser() as any)
-    router.push('/')
-  }
+    dispatch(logoutUser() as any);
+    router.push("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background">
@@ -46,12 +59,23 @@ export default function Navbar() {
             <Menu size={24} />
           </button>
 
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm">▶</span>
-            </div>
-            <span className="hidden sm:inline">YouTube Clone</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center w-48 h-12">
+  <img
+    src={
+      // Nếu chưa mounted (SSR), ép render cố định một logo mặc định (ví dụ: light)
+      // Khi đã mounted, lúc này mới dựa vào resolvedTheme thực tế của trình duyệt
+      !mounted 
+        ? "/Chill-hub-light.svg" 
+        : resolvedTheme === "dark"
+          ? "/Chill-hub.svg"
+          : "/Chill-hub-light.svg"
+    }
+    alt="Chillhub"
+    className="w-full h-full object-contain object-left"
+  />
+</Link>
+          </div>
         </div>
 
         {/* Middle Section - Search */}
@@ -78,7 +102,7 @@ export default function Navbar() {
         </form>
 
         {/* Right Section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Mobile Search */}
           <button
             onClick={() => setSearchValue(searchQuery)}
@@ -88,20 +112,43 @@ export default function Navbar() {
             <Search size={20} />
           </button>
 
+          
+
           {/* Theme Toggle */}
           <button
-            onClick={() => dispatch(toggleTheme())}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleTheme();
+            }}
+            className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer z-[100]"
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            {!mounted ? (
+               <Moon size={20} /> 
+            ) : (theme === "dark" || resolvedTheme === "dark") ? (
+               <Sun size={20} />
+            ) : (
+               <Moon size={20} />
+            )}
           </button>
 
           {/* User Menu */}
           {isAuthenticated && user ? (
+            
             <div className="flex items-center gap-2">
+              <a 
+            href="/upload" 
+            onClick={(e) => {
+              if (window.location.pathname !== '/upload') {
+                window.location.href = '/upload'; 
+              }
+            }}
+          >
+            <Video size={20} />
+          </a>
               <img
-                src={user.profileImage}
+                src={user.avatarUrl || "/default-avatar.png"} // Thêm fallback nhẹ nếu avatar null
                 alt={user.username}
                 className="w-8 h-8 rounded-full object-cover"
               />
@@ -125,5 +172,5 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

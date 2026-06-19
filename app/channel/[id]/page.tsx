@@ -129,7 +129,7 @@ export default function ChannelPage() {
                   className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-colors ${
                     channelDetail.isSubscribed
                       ? 'bg-muted text-foreground hover:bg-muted/80'
-                      : 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-600/50'
+                      : 'bg-amber-500 text-black hover:bg-amber-600 disabled:bg-amber-500/50'
                   }`}
                 >
                   <Bell size={18} />
@@ -138,7 +138,7 @@ export default function ChannelPage() {
               ) : (
                 <button
                   onClick={() => router.push('/login')}
-                  className="flex items-center gap-2 px-6 py-2 rounded-full bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors"
                 >
                   <Bell size={18} />
                   Subscribe
@@ -151,7 +151,7 @@ export default function ChannelPage() {
         {/* Tabs */}
         <div className="border-b border-border px-4 sm:px-8">
           <div className="flex gap-6">
-            <button className="py-4 font-semibold text-foreground border-b-2 border-red-600">
+            <button className="py-4 font-semibold text-foreground border-b-2 border-amber-500">
               Videos
             </button>
             <button className="py-4 text-muted-foreground hover:text-foreground transition-colors">

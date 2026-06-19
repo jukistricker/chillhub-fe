@@ -1,0 +1,16 @@
+(()=>{var e={260:e=>{function r(e){return Promise.resolve().then(()=>{var r=Error("Cannot find module '"+e+"'");throw r.code="MODULE_NOT_FOUND",r})}r.keys=()=>[],r.resolve=r,r.id=260,e.exports=r}},r={};function t(a){var s=r[a];if(void 0!==s)return s.exports;var E=r[a]={exports:{}},o=!0;try{e[a](E,E.exports,t),o=!1}finally{o&&delete r[a]}return E.exports}t.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),(()=>{"use strict";var e,r;let a,s="https://unpkg.com/@ffmpeg/core@0.12.9/dist/umd/ffmpeg-core.js";(r=e||(e={})).LOAD="LOAD",r.EXEC="EXEC",r.FFPROBE="FFPROBE",r.WRITE_FILE="WRITE_FILE",r.READ_FILE="READ_FILE",r.DELETE_FILE="DELETE_FILE",r.RENAME="RENAME",r.CREATE_DIR="CREATE_DIR",r.LIST_DIR="LIST_DIR",r.DELETE_DIR="DELETE_DIR",r.ERROR="ERROR",r.DOWNLOAD="DOWNLOAD",r.PROGRESS="PROGRESS",r.LOG="LOG",r.MOUNT="MOUNT",r.UNMOUNT="UNMOUNT";let E=Error("unknown message type"),o=Error("ffmpeg is not loaded, call `await ffmpeg.load()` first");Error("called FFmpeg.terminate()");let l=Error("failed to import ffmpeg-core.js"),i=async({coreURL:r,wasmURL:E,workerURL:o})=>{let i=!a;
+
+// ===== PATCH: thay importScripts bằng fetch + eval để hoạt động trong blob worker context =====
+try{
+  r||(r=s);
+  const resp = await fetch(r);
+  const code = await resp.text();
+  // dùng Function thay vì eval để tránh strict mode issues
+  (new Function(code))();
+} catch(fetchErr) {
+  // fallback nếu fetch cũng fail
+  if(r&&r!==s||(r=s.replace("/umd/","/esm/")),self.createFFmpegCore=(await t(260)(r)).default,!self.createFFmpegCore)throw l;
+}
+// ===== END PATCH =====
+
+let c=r,R=E||r.replace(/.js$/g,".wasm"),n=o||r.replace(/.js$/g,".worker.js");return(a=await self.createFFmpegCore({mainScriptUrlOrBlob:`${c}#${btoa(JSON.stringify({wasmURL:R,workerURL:n}))}`})).setLogger(r=>self.postMessage({type:e.LOG,data:r})),a.setProgress(r=>self.postMessage({type:e.PROGRESS,data:r})),i};self.onmessage=async({data:{id:r,type:t,data:s}})=>{let l,c=[];try{if(t!==e.LOAD&&!a)throw o;switch(t){case e.LOAD:l=await i(s);break;case e.EXEC:l=(({args:e,timeout:r=-1})=>{a.setTimeout(r),a.exec(...e);let t=a.ret;return a.reset(),t})(s);break;case e.FFPROBE:l=(({args:e,timeout:r=-1})=>{a.setTimeout(r),a.ffprobe(...e);let t=a.ret;return a.reset(),t})(s);break;case e.WRITE_FILE:l=(({path:e,data:r})=>(a.FS.writeFile(e,r),!0))(s);break;case e.READ_FILE:l=(({path:e,encoding:r})=>a.FS.readFile(e,{encoding:r}))(s);break;case e.DELETE_FILE:l=(({path:e})=>(a.FS.unlink(e),!0))(s);break;case e.RENAME:l=(({oldPath:e,newPath:r})=>(a.FS.rename(e,r),!0))(s);break;case e.CREATE_DIR:l=(({path:e})=>(a.FS.mkdir(e),!0))(s);break;case e.LIST_DIR:l=(({path:e})=>{let r=a.FS.readdir(e),t=[];for(let s of r){let r=a.FS.stat(`${e}/${s}`),E=a.FS.isDir(r.mode);t.push({name:s,isDir:E})}return t})(s);break;case e.DELETE_DIR:l=(({path:e})=>(a.FS.rmdir(e),!0))(s);break;case e.MOUNT:l=(({fsType:e,options:r,mountPoint:t})=>{let s=a.FS.filesystems[e];return!!s&&(a.FS.mount(s,r,t),!0)})(s);break;case e.UNMOUNT:l=(({mountPoint:e})=>(a.FS.unmount(e),!0))(s);break;default:throw E}}catch(t){self.postMessage({id:r,type:e.ERROR,data:t.toString()});return}l instanceof Uint8Array&&c.push(l.buffer),self.postMessage({id:r,type:t,data:l},c)}})(),_N_E={}})();

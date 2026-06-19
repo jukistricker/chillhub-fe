@@ -11,7 +11,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'YouTube Clone',
+  title: 'ChillHub',
   description: 'A modern YouTube clone built with Next.js and Redux',
   generator: 'v0.app',
   icons: {
