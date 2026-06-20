@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
     REGISTER: `${AUTH}/signup`,
     LOGOUT: `${AUTH}/logout`,
     INFO: `${AUTH}/info`,
+    REFRESH_TOKEN: `${AUTH}/refresh-token`
   },
   MEDIA: {
     ROOT: "/media",

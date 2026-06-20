@@ -201,6 +201,7 @@ export default function UploadVideo() {
         thumbnail: thumbnailUrl,
         duration: durationInMs,
         userId: user.id,
+        folderId: folderId,
         type: MediaType.Video,
         categoryIds: [] // Có thể thêm logic chọn category ở đây
       };

@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/store'
 import { fetchMedias } from '@/store/slices/mediasSlice'
 import { subscribeChannel } from '@/store/slices/channelsSlice'
 import MainLayout from '@/components/MainLayout'
-import { ThumbsUp, Share2, MoreVertical, Bell } from 'lucide-react'
+import { ThumbsUp, Share2, MoreVertical, Bell, ThumbsDown } from 'lucide-react'
 
 // Các helper function giữ nguyên
 function formatCount(num: number) {
@@ -162,6 +162,12 @@ export default function WatchPage() {
                 <button onClick={handleLike} disabled={liking} className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted hover:bg-border/50 text-sm font-semibold transition-colors">
                   <ThumbsUp size={18} />
                   {formatCount(media.likeCount)}
+                </button>
+                {/* <button onClick={handleLike} disabled={liking} className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted hover:bg-border/50 text-sm font-semibold transition-colors"> */}
+                <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted hover:bg-border/50 text-sm font-semibold transition-colors">
+                    
+                  <ThumbsDown size={18} />
+                  {formatCount(media.dislikeCount)}
                 </button>
                 <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted hover:bg-border/50 text-sm font-semibold transition-colors">
                   <Share2 size={18} /> Share

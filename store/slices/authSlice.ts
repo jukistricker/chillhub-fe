@@ -18,13 +18,12 @@ export const loginUser = createAsyncThunk(
   ) => {
     try {
       // Sửa lại đoạn trong createAsyncThunk
-      const token = await authService.login(credentials.email, credentials.password);
-      console.log("Token nhận được từ server:", token); // Log để kiểm tra
-      localStorage.setItem("access_token", token);
+      const response = await authService.login(credentials.email, credentials.password);
+      console.log("Token nhận được từ server:", response); // Log để kiểm tra
+      
+
       console.log("Token đã lưu trong localStorage:", localStorage.getItem("access_token"));
-          
-      const user = await authService.info();
-      return user;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || "Login failed");
     }
@@ -63,6 +62,7 @@ export const userInfo = createAsyncThunk(
   async (_, {rejectWithValue})=>{
     try {
       const user = await authService.info();
+      console.log("user:", user)
       return user;
     } catch (error: any) {
       return rejectWithValue(error.message || "Logout failed");
@@ -86,11 +86,11 @@ const authSlice = createSlice({
     });
     builder.addCase(
       loginUser.fulfilled,
-      (state, action: PayloadAction<User>) => {
+      (state, action: PayloadAction<any>) => {
         state.loading = false;
-        state.user = action.payload;
-        console.log("payload",action.payload)
-        console.log("state",state.user)
+        state.user = action.payload.user;
+        localStorage.setItem("access_token", action.payload.token);
+        localStorage.setItem("refresh_token", action.payload.refreshToken);
         state.isAuthenticated = true;
         state.error = null;
       }

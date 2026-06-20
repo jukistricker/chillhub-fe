@@ -25,6 +25,7 @@ export interface MediaCreateRequest {
   thumbnail?: string | null;
   duration: number;
   userId: string;
+  folderId:string;
   type: MediaType;
   categoryIds?: string[]|null; 
 }
