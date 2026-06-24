@@ -46,5 +46,27 @@ create: async (data: MediaCreateRequest) => {
         { requireAuth: true,}
     );
     return response.data;
+  },
+
+  getSubscriberStatus: async (channelId: string) => {
+    const response = await api.get(`/subscribers/status/${channelId}`, {
+      requireAuth: true,
+    });
+    console.log("getSubscriberStatus",response.data)
+    return response.data; 
+  },
+
+  batchSubscribe: async (requests: Array<{ subscriberId: string; channelId: string; isNotice: boolean; createdAt: string }>) => {
+    const response = await api.post('/subscribers/batch-subscribe', requests, {
+      requireAuth: true,
+    });
+    return response.data;
+  },
+
+  batchUnsubscribe: async (requests: Array<{ subscriberId: string; channelId: string; createdAt: string }>) => {
+    const response = await api.post('/subscribers/batch-unsubscribe', requests, {
+      requireAuth: true,
+    });
+    return response.data;
   }
 };

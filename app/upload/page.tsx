@@ -112,34 +112,60 @@ export default function UploadVideo() {
         try { ffmpeg.FS("mkdir", `res_${i}`); } catch (e) {}
       }
 
-      const ffmpegArgs = [
-        "-i", "input_video",
-        "-threads", "2",
-        "-preset", "ultrafast",
-        "-g", "48",
-        "-sc_threshold", "0"
-      ];
+     const ffmpegArgs = [
+  "-i", "input_video",
+  "-threads", "2",
+  "-preset", "superfast", 
+  "-g", "48",
+  "-sc_threshold", "0"
+];
 
-      resolutions.forEach((res, index) => {
-        const height = parseInt(res);
-        const width = Math.round((height * metadata.width) / metadata.height);
-        const safeWidth = width % 2 === 0 ? width : width + 1;
-        
-        ffmpegArgs.push(
-          "-map", "0:v", "-map", "0:a",
-          `-s:v:${index}`, `${safeWidth}x${height}`,
-          `-c:v:${index}`, "libx264",
-          `-b:v:${index}`, `${index === 0 ? "800k" : "1500k"}`,
-          `-crf:${index}`, "28"
-        );
-      });
+// Giả sử mảng đầu vào của bạn như thế này:
+// const resolutions = ["240", "480", "720"];
 
-      ffmpegArgs.push(
-        "-f", "hls", "-hls_time", "6", "-hls_list_size", "0",
-        "-master_pl_name", "master.m3u8",
-        "-var_stream_map", resolutions.map((_, i) => `v:${i},a:${i}`).join(" "),
-        "res_%v/index.m3u8"
-      );
+resolutions.forEach((res, index) => {
+  const height = parseInt(res);
+  const width = Math.round((height * metadata.width) / metadata.height);
+  const safeWidth = width % 2 === 0 ? width : width + 1;
+  
+  // Tính toán bitrate tối ưu riêng cho từng mốc 240p, 480p, 720p linh hoạt
+  let targetBitrate, maxBitrate, bufSize;
+  
+  if (height <= 240) {
+    targetBitrate = "400k";
+    maxBitrate = "600k";
+    bufSize = "800k";
+  } else if (height <= 480) {
+    targetBitrate = "1000k";
+    maxBitrate = "1500k";
+    bufSize = "2000k";
+  } else { // Cho 720p hoặc cao hơn
+    targetBitrate = "2200k";
+    maxBitrate = "3000k";
+    bufSize = "4400k";
+  }
+
+  ffmpegArgs.push(
+    "-map", "0:v", "-map", "0:a",
+    `-s:v:${index}`, `${safeWidth}x${height}`,
+    `-c:v:${index}`, "libx264",
+    `-b:v:${index}`, targetBitrate,
+    `-maxrate:v:${index}`, maxBitrate,
+    `-bufsize:v:${index}`, bufSize,
+    `-profile:v:${index}`, "main",
+    // Đã sửa: Thêm chỉ số :${index} để FFmpeg mapping chính xác cho từng phân giải
+    `-pix_fmt:v:${index}`, "yuv420p" 
+  );
+});
+
+ffmpegArgs.push(
+  "-f", "hls", 
+  "-hls_time", "6", 
+  "-hls_list_size", "0",
+  "-master_pl_name", "master.m3u8",
+  "-var_stream_map", resolutions.map((_, i) => `v:${i},a:${i}`).join(" "),
+  "res_%v/index.m3u8"
+);
 
       await ffmpeg.run(...ffmpegArgs);
 
@@ -155,7 +181,7 @@ export default function UploadVideo() {
       const presignResponse = await fetch(PRESIGNER_WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderId, duration: durationInMs, resolutions }),
+        body: JSON.stringify({ folderId, duration: metadata.duration, resolutions }),
       });
 
       const rawData = await presignResponse.json();
@@ -206,7 +232,7 @@ export default function UploadVideo() {
         categoryIds: [] // Có thể thêm logic chọn category ở đây
       };
 
-      const queueResponse = await fetch(QUEUE_WORKER_URL, {
+      const queueResponse = await fetch(`${QUEUE_WORKER_URL}/api/media`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

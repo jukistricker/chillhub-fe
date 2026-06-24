@@ -6,19 +6,18 @@ import { store, useAppDispatch } from '@/store'
 import { useEffect } from 'react'
 import { userInfo, logoutUser } from '@/store/slices/authSlice' 
 import { authService } from '@/services/auth.service'
+import { SignalRProvider } from '@/providers/SignalRProvider' // 1. IMPORT Ở ĐÂY
 
 // Tạo một component mồi để chạy logic check Auth và Refresh Token ngầm
 function AuthHydration({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // 1. Kiểm tra và lấy thông tin user ngay khi vào app
     const token = localStorage.getItem("access_token");
     if (token) {
       dispatch(userInfo());
     }
 
-    // 2. Thiết lập cấu hình tự động Refresh Token mỗi 10 phút
     const TEN_MINUTES = 10 * 60 * 1000;
 
     const triggerRefresh = async () => {
@@ -32,7 +31,6 @@ function AuthHydration({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("❌ Tự động làm mới Token thất bại:", error);
         
-        // Nếu refresh token cũng hết hạn -> Thực hiện logout sạch sẽ
         if (typeof window !== 'undefined') {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
@@ -41,10 +39,7 @@ function AuthHydration({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Tạo vòng lặp chạy ngầm mỗi 10 phút
     const interval = setInterval(triggerRefresh, TEN_MINUTES);
-
-    // Clear interval để tránh memory leak khi component unmount
     return () => clearInterval(interval);
   }, [dispatch]);
 
@@ -58,10 +53,12 @@ interface RootLayoutClientProps {
 export default function RootLayoutClient({ children }: RootLayoutClientProps) {
   return (
     <Provider store={store}>
-      {/* Bọc AuthHydration ngay dưới Provider để gọi được useAppDispatch */}
       <AuthHydration>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          {/* 2. BỌC SIGNALRPROVIDER TẠI ĐÂY */}
+          <SignalRProvider>
+            {children}
+          </SignalRProvider>
         </ThemeProvider>
       </AuthHydration>
     </Provider>

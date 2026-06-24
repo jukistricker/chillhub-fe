@@ -21,7 +21,8 @@ export const imageService = {
         }
       );
       
-      
+      console.log(response.data)
+      console.log(response)
       return response.data.image_urls;
       
     } catch (error: any) {

@@ -3,6 +3,7 @@ import api from '@/lib/apiClient';
 import { User } from '@/types';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export const authService = {
   login: async (email: string, password: string): Promise<any> => {
     const response = await api.post<any>(
@@ -52,19 +53,40 @@ refreshToken: async (): Promise<any> => {
     }
 
     // Bắt buộc dùng axios gốc thay vì instance 'api' để tránh bị interceptor chặn ngược lại
-    const response = await axios.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN, {
+    const response = await axios.post(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`, {
       accessToken: currentAccessToken,
       refreshToken: currentRefreshToken
     });
+    console.log(response);
+    
 
-    const { accessToken, refreshToken } = response.data;
-
+    const { token, refreshToken } = response.data.data;
+    console.log("accessToken", token)
     // Cập nhật lại vào localStorage
-    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("access_token", token);
     if (refreshToken) {
+      console.log("refreshToken", refreshToken)
       localStorage.setItem("refresh_token", refreshToken);
     }
 
+    return response.data;
+  },
+
+  updateProfile: async (fullName: string, lang: number): Promise<any> => {
+    const response = await api.put<any>(
+      '/auth/update-profile', 
+      { fullName, lang },
+      { requireAuth: true } // Tự động đính kèm Token qua Interceptor
+    );
+    return response.data;
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
+    const response = await api.put<any>(
+      '/auth/change-password', 
+      { currentPassword, newPassword },
+      { requireAuth: true }
+    );
     return response.data;
   }
 };

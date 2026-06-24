@@ -1,50 +1,37 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAppDispatch, useAppSelector } from '@/store'
-import MainLayout from '@/components/MainLayout'
-import { Play, Loader2 } from 'lucide-react' // Đã bỏ Heart icon vì YouTube không dùng icon ở đây
-import { Media } from '@/types/media'
-import { fetchMedias } from '@/store/slices/mediasSlice'
-import { useInView } from 'react-intersection-observer'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store";
+import MainLayout from "@/components/MainLayout";
+import { Play, Loader2 } from "lucide-react"; // Đã bỏ Heart icon vì YouTube không dùng icon ở đây
+import { Media } from "@/types/media";
+import { fetchMedias } from "@/store/slices/mediasSlice";
+import { useInView } from "react-intersection-observer";
+import { formatDate } from "@/lib/dateUtils";
+import { MediaType } from "@/types/enum";
+import { formatViews } from "@/lib/videoUtils";
 
 function VideoCard({ media }: { media: Media }) {
-  const router = useRouter()
+  const router = useRouter();
 
   const handleVideoClick = () => {
-    router.push(`/watch/${media.id}`)
-  }
+    router.push(`/watch/${media.id}`);
+  };
 
-  const formatViews = (views: number) => {
-    if (views >= 1_000_000_000_000) return `${(views / 1_000_000_000_000).toFixed(1)}T`
-    if (views >= 1_000_000_000) return `${(views / 1_000_000_000).toFixed(1)}B`
-    if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M`
-    if (views >= 1_000) return `${(views / 1_000).toFixed(1)}K`
-    return views.toString()
-  }
+  
 
-  const formatDate = (date: string) => {
-    const now = new Date()
-    const videoDate = new Date(date)
-    const diffTime = Math.abs(now.getTime() - videoDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 7) return `${diffDays} days ago`
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
-    return `${Math.floor(diffDays / 365)} years ago`
-  }
-
-  const defaultAvatar = "https://ui-avatars.com/api/?name=CH&background=F59E0B&color=000000&font-size=0.4&bold=true"
-  const userAvatar = media.user?.avatarUrl || defaultAvatar
+  const defaultAvatar =
+    "https://ui-avatars.com/api/?name=CH&background=F59E0B&color=000000&font-size=0.4&bold=true";
+  const userAvatar = media.user?.avatarUrl || defaultAvatar;
 
   return (
     <div className="group cursor-pointer flex flex-col gap-3">
       {/* Thumbnail Section */}
-      <div className="relative overflow-hidden rounded-xl bg-muted aspect-video" onClick={handleVideoClick}>
+      <div
+        className="relative overflow-hidden rounded-xl bg-muted aspect-video"
+        onClick={handleVideoClick}
+      >
         {media.thumbnail ? (
           <img
             src={media.thumbnail}
@@ -58,11 +45,11 @@ function VideoCard({ media }: { media: Media }) {
         )}
         <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-xs text-white font-semibold">
           {(() => {
-            const totalSeconds = Math.floor(media.duration / 1000) 
-            const minutes = Math.floor(totalSeconds / 60)
-            const seconds = totalSeconds % 60
-            
-            return `${minutes}:${String(seconds).padStart(2, '0')}`
+            const totalSeconds = Math.floor(media.duration / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+
+            return `${minutes}:${String(seconds).padStart(2, "0")}`;
           })()}
         </div>
       </div>
@@ -70,28 +57,30 @@ function VideoCard({ media }: { media: Media }) {
       {/* Info Section (YouTube Style: Avatar + Details) */}
       <div className="flex items-start gap-3 pr-4">
         {/* User Avatar */}
-        <div className="flex-shrink-0 mt-0.5">
-          <img 
-            src={userAvatar} 
-            alt={media.user?.fullName || 'User'} 
+        <div className="flex-shrink-0 mt-0.5" onClick={() => router.push(`/channel/${media.userId}`)}>
+          <img
+            src={userAvatar}
+            alt={media.user?.fullName || "User"}
             className="w-9 h-9 rounded-full object-cover border border-border/50"
           />
         </div>
 
         {/* Video Details */}
         <div className="flex flex-col overflow-hidden">
-          <h3 
-            className="font-semibold line-clamp-2 text-foreground cursor-pointer hover:text-primary transition-colors text-base leading-tight mb-1" 
+          <h3
+            className="font-semibold line-clamp-2 text-foreground cursor-pointer hover:text-primary transition-colors text-base leading-tight mb-1"
             onClick={handleVideoClick}
             title={media.title}
           >
             {media.title}
           </h3>
-          
+
           <div className="text-sm text-muted-foreground flex flex-col">
-            <b><span className="hover:text-foreground cursor-pointer transition-colors truncate">
-              {media.user?.fullName || 'Unknown User'}
-            </span></b>
+            <b>
+              <span className="hover:text-foreground cursor-pointer transition-colors truncate" onClick={() => router.push(`/channel/${media.userId}`)}>
+                {media.user?.fullName || "Unknown User"}
+              </span>
+            </b>
             <div className="flex items-center flex-wrap">
               <span>{formatViews(media.viewCount)} views</span>
               <span className="mx-1.5 text-[10px]">•</span>
@@ -101,28 +90,42 @@ function VideoCard({ media }: { media: Media }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function HomePage() {
-  const dispatch = useAppDispatch()
-  
-  const { items: medias, loading, error, nextCursor, hasMore, search } = useAppSelector(state => state.medias)
+  const dispatch = useAppDispatch();
+
+  const {
+    items: medias,
+    loading,
+    error,
+    nextCursor,
+    hasMore,
+    search,
+  } = useAppSelector((state) => state.medias);
 
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
-  })
+  });
 
   useEffect(() => {
-    dispatch(fetchMedias({ cursor: null, pageSize: 12, search: '' }) as any)
-  }, [dispatch])
+    dispatch(fetchMedias({ type:MediaType.Video,cursor: null, pageSize: 12, search: "" }) as any);
+  }, [dispatch]);
 
   useEffect(() => {
     if (inView && hasMore && !loading) {
-      dispatch(fetchMedias({ cursor: nextCursor, pageSize: 12, search: search || '' }) as any)
+      dispatch(
+        fetchMedias({
+          type: MediaType.Video,
+          cursor: nextCursor,
+          pageSize: 12,
+          search: search || "",
+        }) as any,
+      );
     }
-  }, [inView, hasMore, loading, nextCursor, search, dispatch])
+  }, [inView, hasMore, loading, nextCursor, search, dispatch]);
 
   return (
     <MainLayout>
@@ -161,7 +164,7 @@ export default function HomePage() {
                   <span>Loading more videos...</span>
                 </div>
               )}
-              
+
               {!hasMore && medias.length > 0 && (
                 <span className="text-sm text-muted-foreground italic">
                   You have reached the end of the feed
@@ -180,5 +183,5 @@ export default function HomePage() {
         )}
       </div>
     </MainLayout>
-  )
+  );
 }

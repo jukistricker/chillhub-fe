@@ -1,6 +1,6 @@
 import { User } from ".";
 import { BaseEntity } from "./base";
-import { MediaStatus, MediaType } from "./enum";
+import { MediaStatus, MediaType, ReactionType } from "./enum";
 import { UserDto } from "./user";
 export interface Media extends BaseEntity {
   title: string;
@@ -9,12 +9,14 @@ export interface Media extends BaseEntity {
   duration: number;
   viewCount: number;
   userId: string;
+  folderId:string;
   type: MediaType;
   likeCount: number;
   dislikeCount: number;
   overallRating?: number | null;
   mediaStatus: MediaStatus;
   user: UserDto;
+  currentUserReaction?: ReactionType;
 
 //   mediaCategories?: MediaCategory[];
 }
@@ -39,4 +41,17 @@ export interface MediaFilterRequest {
   categoryId?: string | null;
   userId?: string | null;
   type?: MediaType | null;
+}
+
+export interface CheckReactionRequest {
+  UserId: string;
+  MediaId: string;
+}
+
+export interface ReactionResponse {
+  id: string;
+  userId: string;
+  mediaId: string;
+  reactionType: ReactionType;
+  createdAt: string;
 }

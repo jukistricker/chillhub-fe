@@ -4,6 +4,7 @@ import authReducer from "./slices/authSlice";
 import mediasReducer from "./slices/mediasSlice";
 import channelsReducer from "./slices/channelsSlice";
 import uiReducer from "./slices/uiSlice";
+import historyReducer from "./slices/historySlice";
 import { RootState } from "@/types";
 
 export const store = configureStore({
@@ -12,6 +13,7 @@ export const store = configureStore({
     medias: mediasReducer,
     channels: channelsReducer,
     ui: uiReducer,
+    histories: historyReducer
   },
 });
 

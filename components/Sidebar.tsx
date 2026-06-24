@@ -23,13 +23,15 @@ export default function Sidebar() {
             <span>Home</span>
           </Link>
 
-          <Link
-            href="/"
+          {isAuthenticated &&(
+            <Link
+            href="/history"
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-foreground"
           >
             <Flame size={20} />
-            <span>Trending</span>
+            <span>Watch History</span>
           </Link>
+          )}
 
           <Link
             href="/"
@@ -60,7 +62,7 @@ export default function Sidebar() {
             <span>Popular</span>
           </Link>
           <Link
-            href="/"
+            href="/movie"
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-foreground"
           >
             <span>Movies</span>

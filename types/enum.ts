@@ -9,3 +9,10 @@ export enum MediaStatus {
   Success = 2,
   Fail = 3,
 }
+
+export enum ReactionType {
+  
+  Like = 1,
+  Dislike = 2,
+  Discard = 3
+}

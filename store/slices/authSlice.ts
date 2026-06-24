@@ -19,10 +19,7 @@ export const loginUser = createAsyncThunk(
     try {
       // Sửa lại đoạn trong createAsyncThunk
       const response = await authService.login(credentials.email, credentials.password);
-      console.log("Token nhận được từ server:", response); // Log để kiểm tra
-      
-
-      console.log("Token đã lưu trong localStorage:", localStorage.getItem("access_token"));
+      console.log("Token nhận được từ server:", response); 
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || "Login failed");
@@ -90,6 +87,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         localStorage.setItem("access_token", action.payload.token);
+        console.log("access_token", action.payload.token)
         localStorage.setItem("refresh_token", action.payload.refreshToken);
         state.isAuthenticated = true;
         state.error = null;

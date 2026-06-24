@@ -1,3 +1,4 @@
+import { MediaHistory } from "./history";
 import { Media } from "./media";
 
 // User & Auth Types
@@ -79,7 +80,6 @@ export interface ChannelDetail extends Channel {
 
 export interface MediaState {
   items: Media[];
-  mediaDetail: MediaDetail | null;
   nextCursor: string | null;
   pageSize: number;
   isDescending: boolean;
@@ -88,7 +88,11 @@ export interface MediaState {
   loading: boolean;
   error: string | null;
   selectedMedia: Media | null;
+  isSubscribed: boolean;
+  isNoticed: boolean;
+  subscribing: boolean;
 }
+
 
 // Channels State
 export interface ChannelsState {
@@ -98,6 +102,13 @@ export interface ChannelsState {
   error: string | null;
 }
 
+export interface MediaHistoryState {
+  items: MediaHistory[];
+  loading: boolean;
+  error: string | null;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
 
 // UI State
 export interface UIState {
@@ -111,4 +122,5 @@ export interface RootState {
   medias: MediaState;
   channels: ChannelsState;
   ui: UIState;
+  histories: MediaHistoryState
 }
