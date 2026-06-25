@@ -1,16 +1,23 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { v7 as uuidv7 } from "uuid";
-import { useAppSelector } from "@/store"; 
+import { useAppDispatch, useAppSelector } from "@/store"; 
 import { Button } from "@/components/ui/button"; 
 import { getTargetResolutions } from "@/lib/utils";
 import { MediaType } from "@/types/enum";
 import { imageService } from "@/lib/imageUtils";
 import { MediaCreateRequest } from "@/types/media";
+import { useRouter } from "next/navigation";
+import { toast } from 'sonner';
+import { Category } from "@/types/category";
+import { fetchCategories } from "@/store/slices/categorySlice";
+import { createPortal } from "react-dom";
+import CategorySelect from "@/components/ui/CategorySelect";
 
 // Giả định URL Worker Queue của bạn
 const QUEUE_WORKER_URL = process.env.NEXT_PUBLIC_QUEUE_WORKER_URL||"";
 const PRESIGNER_WORKER_URL = process.env.NEXT_PUBLIC_PRESIGNER_WORKER_URL||"";
+const MAX_FILE_SIZE = 70 * 1024 * 1024;
 
 const getVideoMetadata = (file: File): Promise<{ width: number; height: number; duration: number }> => {
   return new Promise((resolve) => {
@@ -27,16 +34,60 @@ const getVideoMetadata = (file: File): Promise<{ width: number; height: number; 
   });
 };
 
+const extractThumbnailFromVideo = (file: File, timeInSeconds: number = 2): Promise<File | null> => {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    video.autoplay = false;
+    video.muted = true;
+    video.src = URL.createObjectURL(file);
+
+    video.onloadeddata = () => {
+      // Đảm bảo thời gian muốn lấy không vượt quá độ dài video
+      // Nếu video ngắn hơn timeInSeconds, lấy frame ở giữa video
+      video.currentTime = Math.min(timeInSeconds, video.duration / 2);
+    };
+
+    video.onseeked = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Vẽ frame hiện tại của video lên canvas
+      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Chuyển canvas thành Blob, sau đó thành File object
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const fileName = `thumbnail-${Date.now()}.jpeg`;
+          const generatedFile = new File([blob], fileName, { type: "image/jpeg" });
+          resolve(generatedFile);
+        } else {
+          resolve(null);
+        }
+        URL.revokeObjectURL(video.src); // Xóa URL để giải phóng bộ nhớ
+      }, "image/jpeg", 0.8); // 0.8 là chất lượng ảnh (80%)
+    };
+
+    video.onerror = () => {
+      resolve(null);
+      URL.revokeObjectURL(video.src);
+    };
+  });
+};
+
 
 
 export default function UploadVideo() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null); 
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>(MediaType.Video);
-  
   // Xử lý Upload
   const [status, setStatus] = useState("");
   const [progress, setProgress] = useState(0);
@@ -44,6 +95,7 @@ export default function UploadVideo() {
   const ffmpegRef = useRef<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   // Lấy dữ liệu user từ Redux
   const { user } = useAppSelector(state => state.auth);
@@ -63,14 +115,34 @@ export default function UploadVideo() {
       setThumbnailPreview(URL.createObjectURL(file));
     }
   };
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Nếu người dùng CHƯA chọn ảnh thumbnail, tự động lấy từ giây thứ 2 của video
+    if (!thumbnailFile) {
+      try {
+        const generatedThumbnail = await extractThumbnailFromVideo(file, 2); 
+        if (generatedThumbnail) {
+          setThumbnailFile(generatedThumbnail);
+          setThumbnailPreview(URL.createObjectURL(generatedThumbnail));
+        }
+      } catch (error) {
+        console.error("Lỗi khi tạo thumbnail tự động:", error);
+      }
+    }
+  };
 
   const processAndUpload = async (e: React.FormEvent, file: File | undefined) => {
     e.preventDefault();
     if (!file) {
-      return setError("Vui lòng chọn video để tải lên.");
+      return setError("Please select video.");
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return setError("File size exceeds the 70MB limit. Please choose a smaller video.");
     }
     if (!user) {
-      return setError("Bạn cần đăng nhập để tải lên video.");
+      return setError("You have to login to upload.");
     }
     
     setIsUploading(true);
@@ -81,7 +153,7 @@ export default function UploadVideo() {
       addLog(`Bắt đầu xử lý file: ${file.name}`);
 
       // 1. Metadata & Phân giải
-      setStatus("Đang phân tích video...");
+      setStatus("Processing video...");
       const metadata = await getVideoMetadata(file);
       const durationInMs = Math.round(metadata.duration * 1000);
       const folderId = uuidv7();
@@ -89,7 +161,7 @@ export default function UploadVideo() {
 
       // 2. Khởi tạo FFmpeg
       if (!ffmpegRef.current) {
-        addLog("Đang tải FFmpeg Core...");
+        addLog("Loading FFmpeg Core...");
         const { createFFmpeg } = await import("@ffmpeg/ffmpeg");
         ffmpegRef.current = createFFmpeg({
           corePath: `${window.location.origin}/ffmpeg-v11/ffmpeg-core.js`,
@@ -104,7 +176,7 @@ export default function UploadVideo() {
       });
 
       // 3. Transcode
-      setStatus("Đang Transcode...");
+      setStatus("Transcoding...");
       const { fetchFile } = await import("@ffmpeg/ffmpeg");
       ffmpeg.FS("writeFile", "input_video", await fetchFile(file));
       
@@ -171,13 +243,13 @@ ffmpegArgs.push(
 
       let thumbnailUrl = null;
       if (thumbnailFile) {
-        setStatus("Đang upload ảnh bìa...");
+        setStatus("Uploading thumbnail...");
         const urls = await imageService.uploadImages([thumbnailFile]);
         thumbnailUrl = urls[0];
       }
 
       // 4. Lấy URL từ Presigner Worker
-      setStatus("Đang lấy vé upload...");
+      setStatus("Receiving resources...");
       const presignResponse = await fetch(PRESIGNER_WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,10 +258,10 @@ ffmpegArgs.push(
 
       const rawData = await presignResponse.json();
       const urlsToUpload = rawData.presignedData || [];
-      if (urlsToUpload.length === 0) throw new Error("Không nhận được presigned URLs");
+      if (urlsToUpload.length === 0) throw new Error("Could not receive resources"); //presign urls
 
       // 5. Upload lên R2
-      setStatus("Đang đẩy dữ liệu lên R2...");
+      setStatus("Uploading video...");
       let successCount = 0;
 
       for (const item of urlsToUpload) {
@@ -219,7 +291,7 @@ ffmpegArgs.push(
       }
 
       // 6. Gửi Metadata vào Queue sau khi Upload R2 thành công
-      setStatus("Đang lưu thông tin hệ thống...");
+      setStatus("Saving metadata...");
 
       const payload: MediaCreateRequest = {
         title: title,
@@ -229,7 +301,7 @@ ffmpegArgs.push(
         userId: user.id,
         folderId: folderId,
         type: MediaType.Video,
-        categoryIds: [] // Có thể thêm logic chọn category ở đây
+        categoryIds: selectedCategoryIds 
       };
 
       const queueResponse = await fetch(`${QUEUE_WORKER_URL}/api/media`, {
@@ -238,11 +310,15 @@ ffmpegArgs.push(
         body: JSON.stringify(payload)
       });
 
-      if (!queueResponse.ok) throw new Error("Lỗi khi gửi thông tin vào Queue");
+      if (!queueResponse.ok) throw new Error("Error when sending data to queue");
 
-      setStatus("Hoàn tất!");
+      setStatus("Done!");
       setIsUploading(false);
       setProgress(100);
+
+      toast.success("Upload success! Please wait some minutes", { duration: 6000 });
+
+      router.push("/");
 
     } catch (err: any) {
       setError(err.message);
@@ -252,7 +328,7 @@ ffmpegArgs.push(
 
   return (
     <div className="max-w-3xl mx-auto p-6 mt-10 border border-border rounded-xl bg-background shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">Tải video lên</h1>
+      <h1 className="text-2xl font-bold mb-6">Upload video</h1>
       
       <form onSubmit={(e) => {
         const fileInput = document.getElementById("video-file") as HTMLInputElement;
@@ -260,7 +336,7 @@ ffmpegArgs.push(
       }} className="space-y-6">
         
         <div>
-          <label className="block text-sm font-medium mb-2">Tiêu đề</label>
+          <label className="block text-sm font-medium mb-2">Title</label>
           <input
             type="text"
             required
@@ -268,23 +344,25 @@ ffmpegArgs.push(
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full p-3 rounded-md bg-muted border border-border outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Nhập tiêu đề video..."
+            placeholder="Enter video title..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Mô tả</label>
+          <label className="block text-sm font-medium mb-2">Description</label>
           <textarea
             disabled={isUploading}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-3 rounded-md bg-muted border border-border outline-none focus:ring-2 focus:ring-primary min-h-[120px]"
-            placeholder="Mô tả nội dung video của bạn..."
+            placeholder="Your video description..."
           />
         </div>
 
         <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Loại nội dung</label>
+        {user?.username=="admin"&&(
+          <div>
+            <label className="block text-sm font-medium mb-2">Media Type</label>
         <select
           value={mediaType}
           onChange={(e) => setMediaType(Number(e.target.value))}
@@ -293,12 +371,14 @@ ffmpegArgs.push(
         >
           <option value={MediaType.Video}>Video</option>
           <option value={MediaType.Movie}>Movie</option>
-          <option value={MediaType.Reel}>Reel</option>
+          {/* <option value={MediaType.Reel}>Reel</option> */}
         </select>
+          </div>
+        )}
       </div>
 
         <div className="mt-4">
-      <label className="block text-sm font-medium mb-2">Ảnh bìa (Thumbnail)</label>
+      <label className="block text-sm font-medium mb-2">Thumbnail</label>
       <input 
         type="file" 
         accept="image/*" 
@@ -316,16 +396,18 @@ ffmpegArgs.push(
             type="file" 
             accept="video/*"
             disabled={isUploading}
+            onChange={handleVideoChange}
             className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90 cursor-pointer"
           />
         </div>
+        <CategorySelect value={selectedCategoryIds} onChange={setSelectedCategoryIds} />
 
         <Button 
           type="submit" 
           disabled={isUploading}
           className="w-full"
         >
-          {isUploading ? "Đang xử lý..." : "Bắt đầu tải lên"}
+          {isUploading ? "Uploading..." : "Start upload"}
         </Button>
       </form>
 
@@ -338,7 +420,7 @@ ffmpegArgs.push(
           </div>
           <div className="w-full bg-neutral-800 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-blue-500 h-full rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.6)]"
+              className="bg-amber-500 h-full rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.6)]"
               style={{ width: `${progress}%` }}
             ></div>
           </div>

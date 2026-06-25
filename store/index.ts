@@ -5,7 +5,10 @@ import mediasReducer from "./slices/mediasSlice";
 import channelsReducer from "./slices/channelsSlice";
 import uiReducer from "./slices/uiSlice";
 import historyReducer from "./slices/historySlice";
+import commentReducer from "./slices/commentSlice";
 import { RootState } from "@/types";
+import subscriberReducer from "./slices/subscriberSlice";
+import categoryReducer from "./slices/categorySlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +16,10 @@ export const store = configureStore({
     medias: mediasReducer,
     channels: channelsReducer,
     ui: uiReducer,
-    histories: historyReducer
+    histories: historyReducer,
+    comments: commentReducer,
+    subscribers: subscriberReducer,
+    categories: categoryReducer
   },
 });
 

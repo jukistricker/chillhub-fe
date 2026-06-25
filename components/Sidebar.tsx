@@ -42,11 +42,19 @@ export default function Sidebar() {
           </Link>
 
           <Link
-            href="/"
+            href="/subscriptions"
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-foreground"
           >
             <Play size={20} />
             <span>Subscriptions</span>
+          </Link>
+
+          <Link
+            href="/media"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-foreground"
+          >
+            <Play size={20} />
+            <span>Your Videos</span>
           </Link>
         </nav>
 

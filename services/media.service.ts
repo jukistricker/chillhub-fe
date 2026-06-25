@@ -30,24 +30,6 @@ create: async (data: MediaCreateRequest) => {
     return response.data;
   },
 
-  likeVideo: async (videoId: string): Promise<Video> => {
-    const response = await api.post<Video>(
-        `/videos/${videoId}/like`, {
-      requireAuth: true,
-    }
-    );
-    return response.data;
-  },
-
-  addComment: async (videoId: string, content: string): Promise<Comment> => {
-    const response = await api.post<Comment>(
-        `/videos/${videoId}/comments`, 
-        { content }, 
-        { requireAuth: true,}
-    );
-    return response.data;
-  },
-
   getSubscriberStatus: async (channelId: string) => {
     const response = await api.get(`/subscribers/status/${channelId}`, {
       requireAuth: true,

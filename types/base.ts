@@ -19,3 +19,10 @@ export interface CursorPagedData<T> {
   nextCursor: string | null;
   hasNextPage: boolean;
 }
+
+export interface CursorRequest {
+  cursor?: string | null;
+  isDescending?: boolean;
+  pageSize?: number;
+  search?: string | null;
+}

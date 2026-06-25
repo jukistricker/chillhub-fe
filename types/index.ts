@@ -1,5 +1,7 @@
+import { SubscribersState } from "@/store/slices/subscriberSlice";
 import { MediaHistory } from "./history";
 import { Media } from "./media";
+import { CategoriesState } from "@/store/slices/categorySlice";
 
 // User & Auth Types
 export interface User {
@@ -123,4 +125,7 @@ export interface RootState {
   channels: ChannelsState;
   ui: UIState;
   histories: MediaHistoryState
+  comments: any
+  subscribers: SubscribersState
+  categories: CategoriesState
 }
