@@ -11,8 +11,7 @@ export function RecommendedVideoCard({ media }: { media: Media }) {
     router.push(`/watch/${media.id}`);
   };
 
-  const defaultAvatar =
-    "https://ui-avatars.com/api/?name=CH&background=F59E0B&color=000000&font-size=0.4&bold=true";
+  const defaultAvatar ="/default-avatar.svg";
   const userAvatar = media.user?.avatarUrl || defaultAvatar;
 
   return (

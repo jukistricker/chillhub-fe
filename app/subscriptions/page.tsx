@@ -49,7 +49,7 @@ export default function SubscriptionsPage() {
     }
   }, [inView, hasNextPage, loading, nextCursor, dispatch, searchTerm]);
 
-  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent( 'CH')}&background=FDE047&color=000000&bold=true`
+  const defaultAvatar = "/default-avatar.svg"
  
   return (
     <MainLayout>
@@ -77,17 +77,15 @@ export default function SubscriptionsPage() {
                 onClick={() => router.push(`/channel/${sub.channelId}`)}
               >
                 <div className="w-16 h-16 rounded-full bg-zinc-800 overflow-hidden flex-shrink-0 border border-border/20">
-                  {sub.channel.avatarUrl ? (
-                    <img 
-                      src={sub.channel.avatarUrl} 
+                  <img 
+                      src={sub.channel.avatarUrl||defaultAvatar} 
                       alt={sub.channel.fullName} 
                       className="w-full h-full object-cover" 
                     />
-                  ) : (
                     <div className="w-full h-full flex items-center justify-center text-zinc-400">
                       <UserCircle size={32} />
                     </div>
-                  )}
+                  
                 </div>
                 
                 <div className="flex-1 min-w-0">

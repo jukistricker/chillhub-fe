@@ -166,9 +166,6 @@ export default function ChannelPage() {
     )
   }
 
-  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(channelUser.fullName || 'CH')}&background=FDE047&color=000000&bold=true`
-  const avatarUrl = channelUser.avatarUrl || defaultAvatar
-
   return (
     <MainLayout>
       <div className="w-full font-sans text-foreground pb-12">
@@ -183,7 +180,7 @@ export default function ChannelPage() {
         {/* THÔNG TIN CHỦ KÊNH */}
         <div className="max-w-[1280px] mx-auto px-6 pt-6 flex flex-col md:flex-row gap-6 items-start">
           <img 
-            src={avatarUrl} 
+            src={channelUser.avatarUrl || "/default-avatar.svg"} 
             alt={channelUser.fullName} 
             className="w-24 h-24 md:w-40 md:h-40 rounded-full object-cover border border-border/40 shadow-sm"
           />

@@ -290,11 +290,13 @@ export default function Navbar() {
               </div>
 
               {/* Avatar User */}
-              <img
+              <div onClick={() => router.push(`/channel/${user.id}`)}>
+                <img
                 src={user.avatarUrl || "/default-avatar.svg"}
                 alt={user.username}
                 className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-border transition-all"
               />
+              </div>
               
               <button
                 onClick={handleLogout}

@@ -593,8 +593,7 @@ const handleToggleReplies = (comment: any) => {
     );
   }
 
-  const defaultAvatar =
-    "https://ui-avatars.com/api/?name=CH&background=FDE047&color=000000&font-size=0.4&bold=true";
+  const defaultAvatar ="/default-avatar.svg";
   const channelAvatar = media.user?.avatarUrl || defaultAvatar;
 
   return (

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  chillhub-fe:
+    container_name: chillhub-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_R2_PUBLIC_URL=${NEXT_PUBLIC_R2_PUBLIC_URL}
+        - NEXT_PUBLIC_PRESIGNER_WORKER_URL=${NEXT_PUBLIC_PRESIGNER_WORKER_URL}
+        - NEXT_PUBLIC_QUEUE_WORKER_URL=${NEXT_PUBLIC_QUEUE_WORKER_URL}
+        - NEXT_PUBLIC_IMAGE_UPLOAD_WORKER=${NEXT_PUBLIC_IMAGE_UPLOAD_WORKER}
+    ports:
+      - "2999:2999"
+    restart: always

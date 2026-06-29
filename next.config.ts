@@ -1,9 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   typescript: { 
-    // ignoreBuildErrors: true
-   },
+    ignoreBuildErrors: true 
+  },
   images: { unoptimized: true },
   // Không cần khai báo turbopack hay experimental ở đây
   webpack: (config, { dev }) => {
@@ -76,3 +77,5 @@ const nextConfig: NextConfig = {
   },
 };
 
+
+export default nextConfig;

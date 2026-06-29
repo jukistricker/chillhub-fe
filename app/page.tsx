@@ -19,11 +19,6 @@ function VideoCard({ media }: { media: Media }) {
     router.push(`/watch/${media.id}`);
   };
 
-  
-
-  const defaultAvatar =
-    "https://ui-avatars.com/api/?name=CH&background=F59E0B&color=000000&font-size=0.4&bold=true";
-  const userAvatar = media.user?.avatarUrl || defaultAvatar;
 
   return (
     <div className="group cursor-pointer flex flex-col gap-3">
@@ -59,7 +54,7 @@ function VideoCard({ media }: { media: Media }) {
         {/* User Avatar */}
         <div className="flex-shrink-0 mt-0.5" onClick={() => router.push(`/channel/${media.userId}`)}>
           <img
-            src={userAvatar}
+            src={media.user?.avatarUrl||"/default-avatar.svg"}
             alt={media.user?.fullName || "User"}
             className="w-9 h-9 rounded-full object-cover border border-border/50"
           />
