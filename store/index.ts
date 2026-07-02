@@ -1,19 +1,25 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import authReducer from "./slices/authSlice";
-import videosReducer from "./slices/videosSlice";
+import mediasReducer from "./slices/mediasSlice";
 import channelsReducer from "./slices/channelsSlice";
-import themeReducer from "./slices/themeSlice";
 import uiReducer from "./slices/uiSlice";
+import historyReducer from "./slices/historySlice";
+import commentReducer from "./slices/commentSlice";
 import { RootState } from "@/types";
+import subscriberReducer from "./slices/subscriberSlice";
+import categoryReducer from "./slices/categorySlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    videos: videosReducer,
+    medias: mediasReducer,
     channels: channelsReducer,
-    theme: themeReducer,
     ui: uiReducer,
+    histories: historyReducer,
+    comments: commentReducer,
+    subscribers: subscriberReducer,
+    categories: categoryReducer
   },
 });
 

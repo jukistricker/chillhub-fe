@@ -44,7 +44,7 @@ export default function LoginPage() {
         <div className="bg-card border border-border rounded-lg shadow-lg p-8">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center">
               <span className="text-white text-2xl">▶</span>
             </div>
           </div>
@@ -53,7 +53,7 @@ export default function LoginPage() {
             Welcome Back
           </h1>
           <p className="text-center text-muted-foreground mb-8">
-            Sign in to your YouTube Clone account
+            Sign in to your ChillHub account
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white font-semibold py-2 rounded-lg transition-colors"
+              className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-white font-semibold py-2 rounded-lg transition-colors"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>

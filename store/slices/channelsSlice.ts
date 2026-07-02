@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { ChannelsState, ChannelDetail } from "@/types";
-import { apiService } from "@/lib/api/api";
+import { channelService } from "@/services/channel.service";
 
 const initialState: ChannelsState = {
   channels: [],
@@ -9,12 +9,14 @@ const initialState: ChannelsState = {
   error: null,
 };
 
+
+
 // Async Thunks
 export const fetchChannelDetail = createAsyncThunk(
   "channels/fetchChannelDetail",
   async (channelId: string, { rejectWithValue }) => {
     try {
-      const channel = await apiService.fetchChannelDetail(channelId);
+      const channel = await channelService.fetchChannelDetail(channelId);
       return channel;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch channel");
@@ -26,7 +28,7 @@ export const subscribeChannel = createAsyncThunk(
   "channels/subscribeChannel",
   async (channelId: string, { rejectWithValue }) => {
     try {
-      const channel = await apiService.subscribeChannel(channelId);
+      const channel = await channelService.subscribeChannel(channelId);
       return channel;
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to subscribe");
